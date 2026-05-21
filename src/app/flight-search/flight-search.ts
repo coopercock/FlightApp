@@ -1,7 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Flight, initFlight } from '../data/flight';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, JsonPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { FlightService } from '../flight';
+import { first } from 'rxjs';
 
 @Component({
   selector: 'app-flight-search', // <app-flight-search />
@@ -10,6 +13,9 @@ import { DatePipe, JsonPipe } from '@angular/common';
   styleUrl: './flight-search.css',
 })
 export class FlightSearch {
+
+  private flightService = inject(FlightService);
+
   from = signal('Graz');
   to = signal('Hamburg');
 
@@ -18,26 +24,11 @@ export class FlightSearch {
 initFlight: any;
 
   search(): void {
-    this.flights.set( [
-      {
-        id: 1,
-        from: this.from(),
-        to: this.to(),
-        date: new Date().toISOString()
-      },
-      {
-        id: 2,
-        from: this.from(),
-        to: this.to(),
-        date: new Date().toISOString()
-      },
-      {
-        id: 3,
-        from: this.from(),
-        to: this.to(),
-        date: new Date().toISOString()
-      },
-    ]);
+    this.flightService.search(this.from(), this.to()).pipe(first()).subscribe(
+      (flights) => {
+        this.flights.set(flights);
+      }
+    );    
   }
 
   selectFlight(flight: Flight): void {
